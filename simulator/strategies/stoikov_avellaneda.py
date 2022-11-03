@@ -14,6 +14,7 @@ class StoikovAvellaneda():
         sigma: float = 0.05,
         k: float = 0.5,
         time_trading_session_ends: float = 1655976252046013863,
+        time_trading_session_starts: float = 1655942402250125991,
     ) -> None:
         '''
             Args:
@@ -27,6 +28,7 @@ class StoikovAvellaneda():
         self.gamma = gamma
         self.sigma = sigma
         self.time_trading_session_ends = time_trading_session_ends
+        self.time_trading_session_starts = time_trading_session_starts
         self.k = k
     
     def run(self, sim: Sim ) ->\
@@ -53,6 +55,8 @@ class StoikovAvellaneda():
         #current best positions
         best_bid = -np.inf
         best_ask = np.inf
+        best_bid_vol = 0.000000001
+        best_ask_vol = 0.000000001
 
         #last order timestamp
         prev_time = -np.inf
@@ -69,7 +73,8 @@ class StoikovAvellaneda():
             for update in updates:
                 #update best position
                 if isinstance(update, MdUpdate):
-                    best_bid, best_ask = update_best_positions(best_bid, best_ask, update)
+                    best_bid, best_ask, best_bid_vol, best_ask_vol = update_best_positions(
+                        best_bid, best_ask, best_bid_vol, best_ask_vol, update)
                     md_list.append(update)
                 elif isinstance(update, OwnTrade):
                     trades_list.append(update)
@@ -82,21 +87,22 @@ class StoikovAvellaneda():
             if receive_ts - prev_time >= self.delay:
                 prev_time = receive_ts
                 #calculate reservation price
-                mid_price = (best_bid + best_ask) / 2
+                # mid_price = (best_bid + best_ask) / 2
+                mid_price = best_bid + (best_ask - best_bid) * \
+                    best_ask_vol / (best_bid_vol + best_ask_vol)
                 q = len(ongoing_orders)
                 sigma_2 = self.sigma**2
-                time = self.time_trading_session_ends - receive_ts
+                time = (self.time_trading_session_ends - receive_ts) / \
+                    (self.time_trading_session_ends - self.time_trading_session_starts)
                 reservation_price = (
                     mid_price -
                     q * self.gamma *
                     sigma_2 * time
                 )
-                delta = (
-                    self.gamma *
-                    sigma_2 * time +
-                    2 / self.gamma *
-                    np.log(1 + self.gamma / self.k)
-                ) / 2
+                d_1 = self.gamma * sigma_2 * time
+                d_2 = 2 / self.gamma * np.log(1 + self.gamma / self.k)
+                delta = (d_1 + d_2) /2
+
                 bid_price = reservation_price - delta
                 ask_price = reservation_price + delta
                 #place order
