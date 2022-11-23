@@ -5,7 +5,7 @@ import pandas as pd
 from simulator.simulator import AnonTrade, MdUpdate, OrderbookSnapshotUpdate
 
 
-def load_trades(path, nrows=10000) -> List[AnonTrade]:
+def load_trades(path, nrows=10000, type='csv') -> List[AnonTrade]:
     '''
         This function downloads trades data
 
@@ -16,7 +16,10 @@ def load_trades(path, nrows=10000) -> List[AnonTrade]:
         Return:
             trades(List[AnonTrade]): list of trades 
     '''
-    trades = pd.read_csv(path + 'trades.csv', nrows=nrows)
+    if type == 'csv':
+        trades = pd.read_csv(path + 'trades.csv', nrows=nrows)
+    elif type == 'parquet':
+        trades = pd.read_parquet(path + 'trades.parquet')
     
     #переставляю колонки, чтобы удобнее подавать их в конструктор AnonTrade
     trades = trades[ ['exchange_ts', 'receive_ts', 'aggro_side', 'size', 'price' ] ].sort_values(["exchange_ts", 'receive_ts'])
@@ -26,7 +29,7 @@ def load_trades(path, nrows=10000) -> List[AnonTrade]:
     return trades
 
 
-def load_books(path, nrows=10000) -> List[OrderbookSnapshotUpdate]:
+def load_books(path, nrows=10000, type='csv') -> List[OrderbookSnapshotUpdate]:
     '''
         This function downloads orderbook market data
 
@@ -37,7 +40,10 @@ def load_books(path, nrows=10000) -> List[OrderbookSnapshotUpdate]:
         Return:
             books(List[OrderbookSnapshotUpdate]): list of orderbooks snapshots 
     '''
-    lobs   = pd.read_csv(path + 'lobs.csv', nrows=nrows)
+    if type == 'csv':
+        lobs = pd.read_csv(path + 'lobs.csv', nrows=nrows)
+    elif type == 'parquet':
+        lobs = pd.read_parquet(path + 'lobs.parquet')
     
     #rename columns
     names = lobs.columns.values
@@ -75,10 +81,10 @@ def merge_books_and_trades(books : List[OrderbookSnapshotUpdate], trades: List[A
     return md
 
 
-def load_md_from_file(path: str, nrows=10000) -> List[MdUpdate]:
+def load_md_from_file(path: str, nrows=10000, type='csv') -> List[MdUpdate]:
     '''
         This function downloads orderbooks ans trades and merges them
     '''
-    books  = load_books(path, nrows)
-    trades = load_trades(path, nrows)
+    books  = load_books(path, nrows, type)
+    trades = load_trades(path, nrows, type)
     return merge_books_and_trades(books, trades)

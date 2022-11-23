@@ -88,8 +88,7 @@ class StoikovAvellaneda():
                 prev_time = receive_ts
                 #calculate reservation price
                 # mid_price = (best_bid + best_ask) / 2
-                mid_price = best_bid + (best_ask - best_bid) * \
-                    best_ask_vol / (best_bid_vol + best_ask_vol)
+                mid_price = (best_bid + best_ask) / 2 
                 q = len(ongoing_orders)
                 sigma_2 = self.sigma**2
                 time = (self.time_trading_session_ends - receive_ts) / \

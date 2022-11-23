@@ -27,13 +27,12 @@ def get_pnl(updates_list:List[ Union[MdUpdate, OwnTrade] ]) -> pd.DataFrame:
     for i, update in enumerate(updates_list):
         
         if isinstance(update, MdUpdate):
-            best_bid, best_ask, best_bid_vol, best_ask_vol = update_best_positions(
-                best_bid, best_ask, best_bid_vol, best_ask_vol, update)
+            best_bid, best_ask = update_best_positions(
+                best_bid, best_ask, update)
         #mid price
         #i use it to calculate current portfolio value
         # mid_price = 0.5 * ( best_ask + best_bid )
-        mid_price = best_bid + (best_ask - best_bid) * \
-            best_ask_vol / (best_bid_vol + best_ask_vol)
+        mid_price = best_bid + best_ask / 2
         
         if isinstance(update, OwnTrade):
             trade = update    
@@ -57,7 +56,7 @@ def get_pnl(updates_list:List[ Union[MdUpdate, OwnTrade] ]) -> pd.DataFrame:
     df = pd.DataFrame({"exchange_ts": exchange_ts, "receive_ts":receive_ts, "total":worth_arr, "BTC":btc_pos_arr, 
                        "USD":usd_pos_arr, "mid_price":mid_price_arr})
     
-    df = df.groupby('receive_ts').agg(lambda x: x.iloc[-1]).reset_index()    
+    # df = df.groupby('receive_ts').agg(lambda x: x.iloc[-1]).reset_index()    
     return df
 
 

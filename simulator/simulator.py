@@ -65,16 +65,12 @@ class MdUpdate:  # Data of a tick
 def update_best_positions(
     best_bid: float,
     best_ask: float,
-    best_bid_vol: int,
-    best_ask_vol: int,
     md: MdUpdate
 ) -> Tuple[float, float]:
     if not md.orderbook is None:
         best_bid = md.orderbook.bids[0][0]
         best_ask = md.orderbook.asks[0][0]
-        best_bid_vol = md.orderbook.bids[0][1]
-        best_ask_vol = md.orderbook.asks[0][1]
-    return best_bid, best_ask, best_bid_vol, best_ask_vol
+    return best_bid, best_ask
 
 
 class Sim:
